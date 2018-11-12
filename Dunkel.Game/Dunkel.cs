@@ -56,6 +56,7 @@ namespace Dunkel.Game
             services.AddSingleton<IUpdateComponentSystem, PreviousBodySystem>();
 
             services.AddSingleton<FrameRater>();
+            services.AddSingleton<SelectionBox>();
 
             return services;
         }

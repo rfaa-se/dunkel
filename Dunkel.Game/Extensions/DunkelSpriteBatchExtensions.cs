@@ -94,7 +94,7 @@ namespace Microsoft.Xna.Framework.Graphics
             if (_pixel == null)
             {
                 _pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
-                _pixel.SetData(new[] {Color.White});
+                _pixel.SetData(new[] { Color.White });
             }
 
             return _pixel;

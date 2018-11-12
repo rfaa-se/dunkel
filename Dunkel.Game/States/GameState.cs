@@ -8,6 +8,7 @@ using Dunkel.Game.Input;
 using Dunkel.Game.Utilities;
 using Microsoft.Xna.Framework.Graphics;
 using Dunkel.Game.Components.Attributes;
+using Microsoft.Xna.Framework;
 
 namespace Dunkel.Game.States
 {
@@ -15,28 +16,39 @@ namespace Dunkel.Game.States
     {
         private readonly ComponentSystemManager _componentSystemManager;
         private readonly CommandManager _commandManager;
+        private readonly SelectionBox _selectionBox;
         private readonly EntityFactory _entityFactory;
-        private readonly Stack<Entity> _entities;
-        private readonly List<ICommand> _queuedCommands;
+        private readonly List<Entity> _entities;
+        private readonly Queue<ICommand> _queuedCommands;
+        private readonly Queue<Point> _queuedEntites;
 
         public GameState(ComponentSystemManager componentSystemManager, CommandManager commandManager, 
-            EntityFactory entityFactory)
+            SelectionBox selectionBox, EntityFactory entityFactory)
         {
             _componentSystemManager = componentSystemManager ?? throw new ArgumentNullException(nameof(componentSystemManager));
             _commandManager = commandManager ?? throw new ArgumentNullException(nameof(commandManager));
+            _selectionBox = selectionBox ?? throw new ArgumentNullException(nameof(selectionBox));
             _entityFactory = entityFactory ?? throw new ArgumentNullException(nameof(entityFactory));
             
-            _entities = new Stack<Entity>();
-            _queuedCommands = new List<ICommand>();
+            _entities = new List<Entity>();
+            _queuedCommands = new Queue<ICommand>();
+            _queuedEntites = new Queue<Point>();
         }
 
         public void Input(InputManager im)
         {
-            _queuedCommands.Clear();
+            _selectionBox.Input(im);
 
             if (im.IsMouseLeftDown())
             {
-                var mouse = im.GetMousePosition();
+                _queuedEntites.Enqueue(im.GetMousePosition());
+            }
+        }
+
+        public void Update()
+        {
+            while (_queuedEntites.TryDequeue(out var mouse))
+            {/*
                 var ship = _entityFactory.GetShip();
                 var body = ship.GetComponent<BodyComponent>();
                 var speed = ship.GetComponent<SpeedComponent>();
@@ -44,23 +56,13 @@ namespace Dunkel.Game.States
                 body.SetPosition(mouse.X, mouse.Y);
                 speed.Velocity = new flint(5, 25);
 
-                _entities.Push(ship);
-
-                // TODO: add new build command to _commands
+                _entities.Add(ship);*/
             }
 
-            /*if (im.IsMouseRightDown())
+            while (_queuedCommands.TryDequeue(out var command))
             {
-                if (_entities.TryPop(out var entity))
-                {
-                    entity.Die();
-                }
-            }*/
-        }
-
-        public void Update()
-        {
-            // TODO: send queued commands
+                // TODO: send queued commands
+            }
 
             // TODO: handle each new command for this tick
 
@@ -70,6 +72,8 @@ namespace Dunkel.Game.States
         public void Draw(SpriteBatch sb, float delta)
         {
             _componentSystemManager.Draw(sb, delta);
+
+            _selectionBox.Draw(sb, delta);
         }
     }
 }
