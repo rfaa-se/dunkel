@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Dunkel.Game.Components;
 using Dunkel.Game.Components.Attributes;
 using Dunkel.Game.Components.Graphics;
+using Dunkel.Game.Utilities;
 
 namespace Dunkel.Game.Entities
 {
@@ -37,10 +38,16 @@ namespace Dunkel.Game.Entities
             var body = _componentFactory.GetComponent<BodyComponent>();
             var draw = _componentFactory.GetComponent<PriorityTextureComponent>();
             var speed = _componentFactory.GetComponent<SpeedComponent>();
+            var classification = _componentFactory.GetComponent<ClassificationComponent>();
+
+            body.SetDimension(50, 50);
+            speed.Velocity = new flint(5, 25);
+            classification.Type = ClassificationType.Ship;
 
             entity.AddComponent(body);
             entity.AddComponent(draw);
             entity.AddComponent(speed);
+            entity.AddComponent(classification);
 
             return entity;
         }

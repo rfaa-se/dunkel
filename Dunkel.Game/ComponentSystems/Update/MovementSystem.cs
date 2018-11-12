@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Dunkel.Game.Components;
 using Dunkel.Game.Components.Attributes;
+using Dunkel.Game.Components.Utilities;
 using Dunkel.Game.Entities;
 
 namespace Dunkel.Game.ComponentSystems.Update
@@ -10,13 +11,15 @@ namespace Dunkel.Game.ComponentSystems.Update
     {
         public int Priority => 20;
         
-        private readonly Dictionary<int, (SpeedComponent speed, BodyComponent body, Counter counter)> _nodes;
+        private readonly ComponentFactory _componentFactory;
+        private readonly Dictionary<int, (SpeedComponent speed, BodyComponent body, CounterComponent counter)> _nodes;
         private readonly Type _speedComponentType;
         private readonly Type _bodyComponentType;
 
-        public MovementSystem()
+        public MovementSystem(ComponentFactory componentFactory)
         {
-            _nodes = new Dictionary<int, (SpeedComponent, BodyComponent, Counter)>();
+            _componentFactory = componentFactory ?? throw new ArgumentNullException(nameof(componentFactory));
+            _nodes = new Dictionary<int, (SpeedComponent, BodyComponent, CounterComponent)>();
             _speedComponentType = typeof(SpeedComponent);
             _bodyComponentType = typeof(BodyComponent);
 
@@ -59,17 +62,22 @@ namespace Dunkel.Game.ComponentSystems.Update
 
             var speed = entity.GetComponent<SpeedComponent>();
             var body = entity.GetComponent<BodyComponent>();
+            var counter = _componentFactory.GetComponent<CounterComponent>();
 
             if (speed == null || body == null) { return; }
 
-            _nodes[entity.Id] = (speed, body, new Counter());
+            _nodes[entity.Id] = (speed, body, counter);
         }
 
         private void HandleComponentRemoved(Entity entity, IComponent component)
         {
             if (!IsRelevantComponent(component)) { return; }
 
-            _nodes.Remove(entity.Id);
+            if (_nodes.TryGetValue(entity.Id, out var node))
+            {
+                _componentFactory.Recycle(node.counter);
+                _nodes.Remove(entity.Id);
+            }
         }
 
         private bool IsRelevantComponent(IComponent component)
@@ -77,11 +85,6 @@ namespace Dunkel.Game.ComponentSystems.Update
             var type = component.GetType();
 
             return type == _speedComponentType || type == _bodyComponentType;
-        }
-
-        private class Counter
-        {
-            public int Tick { get; set; }
         }
     }
 }

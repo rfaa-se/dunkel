@@ -48,13 +48,10 @@ namespace Dunkel.Game.States
         public void Update()
         {
             while (_queuedEntites.TryDequeue(out var mouse))
-            {/*
-                var ship = _entityFactory.GetShip();
+            {
+                /*var ship = _entityFactory.GetShip();
                 var body = ship.GetComponent<BodyComponent>();
-                var speed = ship.GetComponent<SpeedComponent>();
-                body.SetDimension(50, 50);
                 body.SetPosition(mouse.X, mouse.Y);
-                speed.Velocity = new flint(5, 25);
 
                 _entities.Add(ship);*/
             }
