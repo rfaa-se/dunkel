@@ -14,6 +14,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System.Diagnostics;
+using Dunkel.Game.Network.Packets;
+using Dunkel.Game.Network;
 
 namespace Dunkel.Game
 {
@@ -22,12 +25,16 @@ namespace Dunkel.Game
         // MANAGERS
         private GraphicsDeviceManager _graphicsDeviceManager;
         private InputManager _inputManager;
+        private NetworkManager _networkManager;
         private GameState _gameState; // TODO: move me once a state manager is implemented
 
         // ENGINE
         private SpriteBatch _spriteBatch;
         private long _tickSize;
         private long _tickAccumulator;
+        private TimeSpan _tickTime;
+        private int _tickCounter;
+        private int _ticksPerSecond;
 
         // OPTIONS
         private EngineOptions _options;
@@ -45,6 +52,8 @@ namespace Dunkel.Game
             services.AddSingleton<InputManager>();
             services.AddSingleton<ComponentSystemManager>();
             services.AddSingleton<CommandManager>();
+            services.AddSingleton<NetworkManager>();
+            services.AddSingleton<PacketManager>();
 
             services.AddSingleton<GameState>();
             
@@ -65,6 +74,7 @@ namespace Dunkel.Game
         {
             _graphicsDeviceManager = app.GetRequiredService<GraphicsDeviceManager>();
             _inputManager = app.GetRequiredService<InputManager>();
+            _networkManager = app.GetRequiredService<NetworkManager>();
 
             _options = app.GetRequiredService<IOptions<EngineOptions>>().Value;
 
@@ -122,6 +132,15 @@ namespace Dunkel.Game
                 UpdateFixed();
 
                 _tickAccumulator -= _tickSize;
+                _tickCounter++;
+            }
+
+            _tickTime += gameTime.ElapsedGameTime;
+            if (_tickTime >= TimeSpan.FromSeconds(1))
+            {
+                _tickTime -= TimeSpan.FromSeconds(1);
+                _ticksPerSecond = _tickCounter;
+                _tickCounter = 0;
             }
 
             base.Update(gameTime);
@@ -129,9 +148,10 @@ namespace Dunkel.Game
 
         private void UpdateFixed()
         {
+            _networkManager.Update();
             _gameState.Update();
 
-            Window.Title = $"Dunkel | FPS:{_frameRater.Fps}";
+            Window.Title = $"Dunkel | TPS:{_ticksPerSecond} | FPS:{_frameRater.Fps}";
         }
     }
 }

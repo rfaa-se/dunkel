@@ -58,13 +58,18 @@ namespace Dunkel.Game.ComponentSystems.Update
         {
             if (!IsRelevantComponent(component)) { return; }
 
-            _nodes.Remove(entity.Id);
+            if (_nodes.TryGetValue(entity.Id, out var node))
+            {
+                _componentFactory.Recycle(node.counter);
+                _nodes.Remove(entity.Id);
+            }
 
             var speed = entity.GetComponent<SpeedComponent>();
             var body = entity.GetComponent<BodyComponent>();
-            var counter = _componentFactory.GetComponent<CounterComponent>();
 
             if (speed == null || body == null) { return; }
+
+            var counter = _componentFactory.GetComponent<CounterComponent>();
 
             _nodes[entity.Id] = (speed, body, counter);
         }
