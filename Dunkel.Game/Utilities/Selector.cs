@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Dunkel.Game.Utilities
 {
-    public class SelectionBox
+    public class Selector
     {
         public Rectangle Box => _box;
         public bool HasSelected { get; private set; }
@@ -56,7 +56,7 @@ namespace Dunkel.Game.Utilities
             }
         }
 
-        public void Draw(SpriteBatch sb, float delta)
+        public void Draw(SpriteBatch sb)
         {
             if (!IsSelecting) { return; }
 

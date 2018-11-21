@@ -17,6 +17,8 @@ using Microsoft.Xna.Framework.Input;
 using System.Diagnostics;
 using Dunkel.Game.Network.Packets;
 using Dunkel.Game.Network;
+using Microsoft.Extensions.Logging;
+using Dunkel.Game.Cosmos;
 
 namespace Dunkel.Game
 {
@@ -27,6 +29,7 @@ namespace Dunkel.Game
         private InputManager _inputManager;
         private NetworkManager _networkManager;
         private GameState _gameState; // TODO: move me once a state manager is implemented
+        private World _world; // TODO: only needed here to display world tick in window title
 
         // ENGINE
         private SpriteBatch _spriteBatch;
@@ -45,6 +48,11 @@ namespace Dunkel.Game
         public IServiceCollection Configure(IServiceCollection services)
         {
             services.AddOptions();
+            services.AddLogging(x => 
+            {
+                x.AddDebug();
+                x.SetMinimumLevel(LogLevel.Trace);
+            });
             
             services.AddSingleton<Microsoft.Xna.Framework.Game>(this);
 
@@ -60,12 +68,15 @@ namespace Dunkel.Game
             services.AddSingleton<EntityFactory>();
             services.AddSingleton<ComponentFactory>();
 
+            services.AddSingleton<World>();
+
             services.AddSingleton<IDrawComponentSystem, DrawRectangleSystem>();
+            services.AddSingleton<IDrawComponentSystem, SelectedEntitySystem>();
             services.AddSingleton<IUpdateComponentSystem, MovementSystem>();
             services.AddSingleton<IUpdateComponentSystem, PreviousBodySystem>();
 
             services.AddSingleton<FrameRater>();
-            services.AddSingleton<SelectionBox>();
+            services.AddSingleton<Selector>();
 
             return services;
         }
@@ -79,6 +90,7 @@ namespace Dunkel.Game
             _options = app.GetRequiredService<IOptions<EngineOptions>>().Value;
 
             _gameState = app.GetRequiredService<GameState>();
+            _world = app.GetRequiredService<World>();
 
             _frameRater = app.GetRequiredService<FrameRater>();
         }
@@ -151,7 +163,7 @@ namespace Dunkel.Game
             _networkManager.Update();
             _gameState.Update();
 
-            Window.Title = $"Dunkel | TPS:{_ticksPerSecond} | FPS:{_frameRater.Fps}";
+            Window.Title = $"Dunkel | TPS:{_ticksPerSecond} | FPS:{_frameRater.Fps} | TICK:{_world.CurrentTick}";
         }
     }
 }

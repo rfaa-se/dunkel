@@ -34,20 +34,11 @@ namespace Dunkel.Game.Entities
         public Entity GetShip()
         {
             var entity = GetEntity();
-
-            var body = _componentFactory.GetComponent<BodyComponent>();
-            var draw = _componentFactory.GetComponent<PriorityTextureComponent>();
-            var speed = _componentFactory.GetComponent<SpeedComponent>();
-            var classification = _componentFactory.GetComponent<ClassificationComponent>();
-
-            body.SetDimension(50, 50);
-            speed.Velocity = new flint(5, 25);
-            classification.Type = ClassificationType.Ship;
-
-            entity.AddComponent(body);
-            entity.AddComponent(draw);
-            entity.AddComponent(speed);
-            entity.AddComponent(classification);
+            
+            entity.AddComponent<BodyComponent>(x => x.SetDimension(50, 50));
+            entity.AddComponent<PriorityTextureComponent>();
+            entity.AddComponent<SpeedComponent>(x => x.Velocity = new flint(5, 25));
+            entity.AddComponent<ClassificationComponent>(x => x.Type = ClassificationType.Ship);
 
             return entity;
         }

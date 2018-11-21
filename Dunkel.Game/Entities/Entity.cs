@@ -43,12 +43,16 @@ namespace Dunkel.Game.Entities
             _entityFactory.Recycle(this);
         }
 
-        public void AddComponent(IComponent component)
+        public void AddComponent<T>() where T : class, IComponent, new()
         {
-            if (_components.TryGetValue(component.GetType(), out var oldComponent))
-            {
-                RemoveRecycleComponent(oldComponent);
-            }
+            AddComponent<T>(x => {});
+        }
+
+        public void AddComponent<T>(Action<T> configure) where T : class, IComponent, new()
+        {
+            var component = _componentFactory.GetComponent<T>();
+            
+            configure(component);
 
             _components[component.GetType()] = component;
             OnComponentAdded?.Invoke(this, component);
@@ -66,6 +70,12 @@ namespace Dunkel.Game.Entities
         {
             _components.TryGetValue(typeof(T), out var component);
             return component as T;
+        }
+
+        public bool TryGetComponent<T>(out T component) where T : class, IComponent
+        {
+            component = GetComponent<T>();
+            return component != null;
         }
 
         public bool HasComponent<T>() where T : class, IComponent

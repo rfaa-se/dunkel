@@ -64,14 +64,11 @@ namespace Dunkel.Game.ComponentSystems.Update
                 _nodes.Remove(entity.Id);
             }
 
-            var speed = entity.GetComponent<SpeedComponent>();
-            var body = entity.GetComponent<BodyComponent>();
-
-            if (speed == null || body == null) { return; }
-
-            var counter = _componentFactory.GetComponent<CounterComponent>();
-
-            _nodes[entity.Id] = (speed, body, counter);
+            if (   entity.TryGetComponent<SpeedComponent>(out var speed)
+                && entity.TryGetComponent<BodyComponent>(out var body))
+            {
+                _nodes[entity.Id] = (speed, body, _componentFactory.GetComponent<CounterComponent>());
+            }
         }
 
         private void HandleComponentRemoved(Entity entity, IComponent component)

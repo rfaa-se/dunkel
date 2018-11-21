@@ -6,7 +6,7 @@ namespace Dunkel.Game.Utilities
 {
     public class FrameRater
     {
-        public int Fps { get => (int)(_elapsedTimeMeasurements.Length / _totalElapsedTime); }
+        public int Fps { get => (int)Math.Round(_elapsedTimeMeasurements.Length / _totalElapsedTime); }
 
         private int _tick;
         private double[] _elapsedTimeMeasurements;

@@ -1,117 +1,119 @@
 using System;
 using System.Collections.Generic;
-using Dunkel.Game.Components;
-using Dunkel.Game.Entities;
 using Dunkel.Game.Commands;
-using Dunkel.Game.ComponentSystems;
 using Dunkel.Game.Input;
-using Dunkel.Game.Utilities;
-using Microsoft.Xna.Framework.Graphics;
 using Dunkel.Game.Components.Attributes;
-using Microsoft.Xna.Framework;
 using Dunkel.Game.Commands.Game;
 using Dunkel.Game.Network;
 using Dunkel.Game.Network.Packets.Game;
+using Dunkel.Game.Options;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
+using System.Linq;
+using Dunkel.Game.Cosmos;
 
 namespace Dunkel.Game.States
 {
     public class GameState
     {
-        private readonly ComponentSystemManager _componentSystemManager;
+        public bool IsStalling { get; private set; }
+
         private readonly CommandManager _commandManager;
         private readonly NetworkManager _networkManager;
-        private readonly SelectionBox _selectionBox;
-        private readonly EntityFactory _entityFactory;
-        private readonly List<Entity> _entities;
-        private readonly Queue<Point> _queuedEntites;
+        private readonly World _world;
         private readonly List<ICommand> _queuedCommands;
-        private readonly Dictionary<long, ICommand[]> _updates;
+        private readonly Dictionary<long, (long playerId, ICommand[] commands)[]> _updates;
+        private readonly Dictionary<long, int> _playerIndexes;
+        private readonly EngineOptions _options;
+        private readonly ILogger<GameState> _logger;
 
-        private bool _isStalling;
-        private long _tickCurrent;
-
-        public GameState(ComponentSystemManager componentSystemManager, CommandManager commandManager, 
-            NetworkManager networkManager, SelectionBox selectionBox, EntityFactory entityFactory)
+        public GameState(CommandManager commandManager, NetworkManager networkManager, World world,
+            IOptions<EngineOptions> options, ILogger<GameState> logger)
         {
-            _componentSystemManager = componentSystemManager ?? throw new ArgumentNullException(nameof(componentSystemManager));
             _commandManager = commandManager ?? throw new ArgumentNullException(nameof(commandManager));
             _networkManager = networkManager ?? throw new ArgumentNullException(nameof(networkManager));
-            _selectionBox = selectionBox ?? throw new ArgumentNullException(nameof(selectionBox));
-            _entityFactory = entityFactory ?? throw new ArgumentNullException(nameof(entityFactory));
+            _world = world ?? throw new ArgumentNullException(nameof(world));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             
-            _entities = new List<Entity>();
             _queuedCommands = new List<ICommand>();
-            _queuedEntites = new Queue<Point>();
-            _updates = new Dictionary<long, ICommand[]>();
+            _updates = new Dictionary<long, (long, ICommand[])[]>();
+            _playerIndexes = new Dictionary<long, int>();
+
+            _playerIndexes[1337] = 0;
+            _playerIndexes[1338] = 1;
 
             _networkManager.Packets.OnGameUpdate += HandleGameUpdate;
         }
 
         public void Input(InputManager im)
         {
-            _selectionBox.Input(im);
-
             if (im.IsMouseRightPressed())
             {
-                //_queuedEntites.Enqueue(im.GetMousePosition());
                 _queuedCommands.Add(new SpawnCommand(im.GetMousePosition(), ClassificationType.Ship));
             }
+
+            _world.Input(im);
         }
 
         public void Update()
         {
-            _isStalling = !_updates.TryGetValue(_tickCurrent, out var commands);
+            IsStalling = 
+                      !_updates.TryGetValue(_world.CurrentTick, out var playersCommands)
+                   || playersCommands.Any(x => x.commands == null);
 
-            if (_isStalling)
+            if (IsStalling)
             {
-                System.Diagnostics.Debug.WriteLine($"{_tickCurrent}");
-                return;
+                // we must allow the game to progress for the first X ticks without previous updates
+                if (_world.CurrentTick < _options.TicksFutureSchedule)
+                {
+                    IsStalling = false;
+                    playersCommands = new (long, ICommand[])[0];
+                }
+                else
+                {
+                    _logger.LogDebug("Stalling at tick {tick}.", _world.CurrentTick);
+                    return;
+                }
             }
 
-            foreach (var command in commands)
+            // run all commands
+            foreach (var playerCommands in playersCommands)
             {
-                switch (command.Type)
+                foreach (var command in playerCommands.commands)
                 {
-                    case CommandType.Spawn:
-                    {
-                        var c = (SpawnCommand)command;
-                        Entity entity = null;
-
-                        switch (c.ClassificationType)
-                        {
-                            case ClassificationType.Ship:
-                                entity = _entityFactory.GetShip();
-                                break;
-                        }
-
-                        entity.GetComponent<BodyComponent>().SetPosition(c.Point.X, c.Point.Y);
-                        _entities.Add(entity);
-                        break;
-                    }
+                    _commandManager.Update(_world, command, playerCommands.playerId);
                 }
             }
 
             // send current queued commands and then clear the command queue
-            _networkManager.SendPacket(new UpdatePacket(_tickCurrent, _queuedCommands.ToArray()), _tickCurrent);
+            _networkManager.SendPacket(new UpdatePacket(_world.CurrentTick, _queuedCommands.ToArray()));
             _queuedCommands.Clear();
-
-            _componentSystemManager.Update();
-
-            _tickCurrent++;
+            
+            // and lastly update the world
+            _world.Update();
         }
 
         public void Draw(SpriteBatch sb, float delta)
         {
-            if (_isStalling) { delta = 1f; }
+            // if we're stalling we need to set the delta to 1f to avoid interpolation glitching
+            if (IsStalling) { delta = 1f; }
 
-            _componentSystemManager.Draw(sb, delta);
-
-            _selectionBox.Draw(sb, delta);
+            _world.Draw(sb, delta);
         }
 
         private void HandleGameUpdate(UpdatePacket packet)
         {
-            _updates.Add(packet.Tick, packet.Commands);
+            if (!_updates.TryGetValue(packet.Tick, out var updates))
+            {
+                updates = new (long, ICommand[])[2]; // TODO: 2 should be current amount of players
+                _updates.Add(packet.Tick, updates);
+            }
+            
+            var playerIndex = _playerIndexes[packet.ClientId];
+            updates[playerIndex].playerId = packet.ClientId;
+            updates[playerIndex].commands = packet.Commands;
         }
     }
 }

@@ -40,11 +40,10 @@ namespace Dunkel.Game.ComponentSystems.Update
 
             _nodes.Remove(entity.Id);
 
-            var body = entity.GetComponent<BodyComponent>();
-
-            if (body == null) { return; }
-
-            _nodes[entity.Id] = body;
+            if (entity.TryGetComponent<BodyComponent>(out var body))
+            {
+                _nodes[entity.Id] = body;
+            }
         }
 
         private void HandleComponentRemoved(Entity entity, IComponent component)

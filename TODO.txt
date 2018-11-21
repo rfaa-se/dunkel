@@ -1,1 +1,5 @@
 Investigate flint overflows, use long in the background?
+
+Add a start and stop method for all component systems?
+This way we can enable the relevant systems when we need them.
+

@@ -1,5 +1,6 @@
 using Dunkel.Game.Components;
 using Dunkel.Game.Utilities;
+using Microsoft.Xna.Framework;
 
 namespace Dunkel.Game.Components.Attributes
 {
@@ -32,6 +33,11 @@ namespace Dunkel.Game.Components.Attributes
         public void SetRotation(int rotation)
         {
             Rotation = PrevRotation = rotation;
+        }
+
+        public bool Intersects(Rectangle box)
+        {
+            return box.Intersects(new Rectangle(X, Y, Width, Height));
         }
 
         public void Reset()

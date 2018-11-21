@@ -30,14 +30,14 @@ namespace Dunkel.Game.ComponentSystems.Draw
             Entity.OnComponentRemoved += HandleComponentRemoved;
         }
 
-        public void Draw(SpriteBatch spriteBatch, float delta)
+        public void Draw(SpriteBatch sb, float delta)
         {
             foreach (var node in _orderedNodes)
             {
                 var draw = node.draw;
                 var body = node.body;
 
-                spriteBatch.DrawRectangle(
+                sb.DrawRectangle(
                     x: MathHelper.Lerp(body.PrevX, body.X, delta),
                     y: MathHelper.Lerp(body.PrevY, body.Y, delta),
                     width: MathHelper.Lerp(body.PrevWidth, body.Width, delta),
@@ -54,18 +54,17 @@ namespace Dunkel.Game.ComponentSystems.Draw
 
             _nodes.Remove(entity.Id);
 
-            var draw = entity.GetComponent<PriorityTextureComponent>();
-            var body = entity.GetComponent<BodyComponent>();
-
-            if (draw == null || body == null) { return; }
-
-            _nodes[entity.Id] = (draw, body);
-            // TODO: might have to optimize this
-            _orderedNodes.Clear();
-            _orderedNodes.AddRange(_nodes
-                .OrderBy(x => x.Value.draw.Priority)
-                .ThenBy(x => x.Key)
-                .Select(x => x.Value));
+            if (   entity.TryGetComponent<PriorityTextureComponent>(out var draw)
+                && entity.TryGetComponent<BodyComponent>(out var body))
+            {
+                _nodes[entity.Id] = (draw, body);
+                // TODO: might have to optimize this
+                _orderedNodes.Clear();
+                _orderedNodes.AddRange(_nodes
+                    .OrderBy(x => x.Value.draw.Priority)
+                    .ThenBy(x => x.Key)
+                    .Select(x => x.Value));
+            }
         }
 
         private void HandleComponentRemoved(Entity entity, IComponent component)
