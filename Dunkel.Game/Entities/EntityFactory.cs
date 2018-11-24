@@ -37,7 +37,7 @@ namespace Dunkel.Game.Entities
             
             entity.AddComponent<BodyComponent>(x => x.SetDimension(50, 50));
             entity.AddComponent<PriorityTextureComponent>();
-            entity.AddComponent<SpeedComponent>(x => x.Velocity = new flint(5, 25));
+            entity.AddComponent<SpeedComponent>(x => x.Velocity = new Flint(5, 25));
             entity.AddComponent<ClassificationComponent>(x => x.Type = ClassificationType.Ship);
 
             return entity;

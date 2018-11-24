@@ -1,13 +1,12 @@
 namespace Dunkel.Game.Utilities
 {
     /// <summary>
-    /// This struct uses integers in the background to simulate floating point and can have up to two decimals.
+    /// This struct uses longs in the background to simulate floating point and can have up to two decimals.
     /// </summary>
-    public struct flint
+    public struct Flint
     {
-        private const int Precision = 100;
-
-        private readonly int _raw;
+        public const int Precision = 100;
+        public readonly long Raw;
 
         /// <summary>
         /// The decimals can be maximum 99, anything above that will be added to the integers part.
@@ -15,33 +14,33 @@ namespace Dunkel.Game.Utilities
         /// new flint(50, 5) => 50.05
         /// new flint(50, 50) => 50.50
         /// </summary>
-        public flint(int integers, int decimals)
+        public Flint(int integers, int decimals)
         {
-            _raw = integers * Precision + decimals;
+            Raw = integers * Precision + decimals;
         }
 
-        public flint(int integers)
+        public Flint(int integers)
         {
-            _raw = integers * Precision;
+            Raw = integers * Precision;
         }
 
         public int ToInt() => (int)this;
         public float ToFloat() => (float)this;
 
-        public static implicit operator flint(int number) => new flint(number);
-        public static implicit operator int(flint number) => number._raw / Precision;
-        public static implicit operator float(flint number) => number._raw / (float)Precision;
+        public static implicit operator Flint(int number) => new Flint(number);
+        public static implicit operator int(Flint number) => (int)(number.Raw / Precision);
+        public static implicit operator float(Flint number) => number.Raw / (float)Precision;
 
-        public static flint operator +(flint one, flint two) => new flint(0, one._raw + two._raw);
-        public static flint operator +(flint one, int two) => one + new flint(two);
+        public static Flint operator +(Flint one, Flint two) => new Flint(0, (int)(one.Raw + two.Raw));
+        public static Flint operator +(Flint one, int two) => one + new Flint(two);
 
-        public static flint operator -(flint one, flint two) => new flint(0, one._raw - two._raw);
-        public static flint operator -(flint one, int two) => one - new flint(two);
+        public static Flint operator -(Flint one, Flint two) => new Flint(0, (int)(one.Raw - two.Raw));
+        public static Flint operator -(Flint one, int two) => one - new Flint(two);
 
-        public static flint operator *(flint one, flint two) => new flint(0, (one._raw * two._raw) / Precision);
-        public static flint operator *(flint one, int two) => one * new flint(two);
+        public static Flint operator *(Flint one, Flint two) => new Flint(0, (int)((one.Raw * two.Raw) / Precision));
+        public static Flint operator *(Flint one, int two) => one * new Flint(two);
 
-        public static flint operator /(flint one, flint two) => new flint(0, (one._raw * Precision / two._raw));
-        public static flint operator /(flint one, int two) => one / new flint(two);
+        public static Flint operator /(Flint one, Flint two) => new Flint(0, (int)((one.Raw * Precision / two.Raw)));
+        public static Flint operator /(Flint one, int two) => one / new Flint(two);
     }
 }

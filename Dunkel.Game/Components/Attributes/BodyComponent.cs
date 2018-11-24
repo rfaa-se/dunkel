@@ -6,14 +6,14 @@ namespace Dunkel.Game.Components.Attributes
 {
     public class BodyComponent : IComponent
     {
-        public flint X { get; set; }
-        public flint Y { get; set; }
+        public Flint X { get; set; }
+        public Flint Y { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
         public int Rotation { get; set; }
 
-        public flint PrevX { get; set; }
-        public flint PrevY { get; set; }
+        public Flint PrevX { get; set; }
+        public Flint PrevY { get; set; }
         public int PrevWidth { get; set; }
         public int PrevHeight { get; set; }
         public int PrevRotation { get; set; }

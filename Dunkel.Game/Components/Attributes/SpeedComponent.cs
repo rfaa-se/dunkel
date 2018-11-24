@@ -5,7 +5,7 @@ namespace Dunkel.Game.Components.Attributes
 {
     public class SpeedComponent : IComponent
     {
-        public flint Velocity { get; set; }
+        public Flint Velocity { get; set; }
 
         public void Reset()
         {
