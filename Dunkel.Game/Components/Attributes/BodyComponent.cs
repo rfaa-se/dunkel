@@ -11,6 +11,7 @@ namespace Dunkel.Game.Components.Attributes
         public int Width { get; set; }
         public int Height { get; set; }
         public int Rotation { get; set; }
+        public Point Center { get => new Point(X + Width / 2, Y + Height / 2); }
 
         public Flint PrevX { get; set; }
         public Flint PrevY { get; set; }

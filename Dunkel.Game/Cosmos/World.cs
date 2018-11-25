@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Dunkel.Game.Commands;
+using Dunkel.Game.Commands.Game;
 using Dunkel.Game.Components.Attributes;
 using Dunkel.Game.Components.Graphics;
 using Dunkel.Game.ComponentSystems;
@@ -29,9 +32,11 @@ namespace Dunkel.Game.Cosmos
             _selectedEntities = new List<Entity>();
         }
 
-        public void Input(InputManager im)
+        public void Input(InputManager im, List<ICommand> commandQueue)
         {
             InputSelector(im);
+            InputSpawn(im, commandQueue);
+            InputMove(im, commandQueue);
         }
 
         public void Update()
@@ -53,11 +58,9 @@ namespace Dunkel.Game.Cosmos
             _entities.Add(entity.Id, entity);
         }
 
-        public Entity GetEntity(int id)
+        public bool TryGetEntity(int id, out Entity entity)
         {
-            _entities.TryGetValue(id, out var entity);
-
-            return entity;
+            return _entities.TryGetValue(id, out entity);
         }
 
         public Entity[] GetEntitiesWithin(Rectangle box)
@@ -96,6 +99,20 @@ namespace Dunkel.Game.Cosmos
                 _selectedEntities.Clear();
                 _selectedEntities.AddRange(entities);
             }
+        }
+
+        private void InputSpawn(InputManager im, List<ICommand> commandQueue)
+        {
+            if (_selectedEntities.Count != 0 || !im.IsMouseRightPressed()) { return; }
+
+            commandQueue.Add(new SpawnCommand(im.GetMousePosition(), ClassificationType.Ship));
+        }
+
+        private void InputMove(InputManager im, List<ICommand> commandQueue)
+        {
+            if (_selectedEntities.Count == 0 || !im.IsMouseRightPressed()) { return; }
+
+            commandQueue.Add(new MoveCommand(im.GetMousePosition(), _selectedEntities.Select(x => x.Id).ToArray()));
         }
     }
 }

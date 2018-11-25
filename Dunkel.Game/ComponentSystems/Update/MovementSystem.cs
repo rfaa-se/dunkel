@@ -31,6 +31,8 @@ namespace Dunkel.Game.ComponentSystems.Update
         {
             foreach (var node in _nodes.Values)
             {
+                if (node.speed.Destination != null) { continue; }
+
                 if (node.counter.Tick == 16*5*4) { node.counter.Tick = 0; }
 
                 if (node.counter.Tick < 16 * 5)
@@ -56,13 +58,7 @@ namespace Dunkel.Game.ComponentSystems.Update
 
         private void HandleComponentAdded(Entity entity, IComponent component)
         {
-            if (!IsRelevantComponent(component)) { return; }
-
-            if (_nodes.TryGetValue(entity.Id, out var node))
-            {
-                _componentFactory.Recycle(node.counter);
-                _nodes.Remove(entity.Id);
-            }
+            HandleComponentRemoved(entity, component);
 
             if (   entity.TryGetComponent<SpeedComponent>(out var speed)
                 && entity.TryGetComponent<BodyComponent>(out var body))

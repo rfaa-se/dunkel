@@ -128,6 +128,9 @@ namespace Dunkel.Tests.Utilities
 
             x = new Flint(0, 24);
             Assert.Equal(0.48f, FlintMath.Sqrt(x).ToFloat());
+
+            x = new Flint(0);
+            Assert.Equal(0f, FlintMath.Sqrt(x).ToFloat());
         }
     }
 }

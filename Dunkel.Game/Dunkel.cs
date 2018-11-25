@@ -74,6 +74,7 @@ namespace Dunkel.Game
             services.AddSingleton<IDrawComponentSystem, SelectedEntitySystem>();
             services.AddSingleton<IUpdateComponentSystem, MovementSystem>();
             services.AddSingleton<IUpdateComponentSystem, PreviousBodySystem>();
+            services.AddSingleton<IUpdateComponentSystem, SpeedSystem>();
 
             services.AddSingleton<FrameRater>();
             services.AddSingleton<Selector>();
@@ -104,7 +105,7 @@ namespace Dunkel.Game
 
             _graphicsDeviceManager.PreferredBackBufferWidth = 1366;
             _graphicsDeviceManager.PreferredBackBufferHeight = 768;
-            _graphicsDeviceManager.SynchronizeWithVerticalRetrace = true;
+            _graphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
             _graphicsDeviceManager.ApplyChanges();
 
             _tickSize = TimeSpan.TicksPerSecond / _options.TicksPerSecond;

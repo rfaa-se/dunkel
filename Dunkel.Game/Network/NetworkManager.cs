@@ -6,6 +6,8 @@ using Dunkel.Game.Commands;
 using Dunkel.Game.Commands.Game;
 using Dunkel.Game.Network.Packets;
 using Dunkel.Game.Network.Packets.Game;
+using Dunkel.Game.Options;
+using Microsoft.Extensions.Options;
 using Microsoft.Xna.Framework;
 
 namespace Dunkel.Game.Network
@@ -14,12 +16,14 @@ namespace Dunkel.Game.Network
     {
         public PacketManager Packets { get; private set; }
 
+        private readonly EngineOptions _options;
         private readonly ConcurrentQueue<IPacket> _packets;
         private readonly Random _random;
 
-        public NetworkManager(PacketManager packetManager)
+        public NetworkManager(PacketManager packetManager, IOptions<EngineOptions> options)
         {
             Packets = packetManager ?? throw new ArgumentNullException(nameof(packetManager));
+            _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
 
             _random = new Random();
             _packets = new ConcurrentQueue<IPacket>();
@@ -45,7 +49,7 @@ namespace Dunkel.Game.Network
                     case PacketType.GameUpdate:
                     {
                         var p = (UpdatePacket)packet;
-                        _packets.Enqueue(new UpdatePacket(1337, p.Tick + 3, p.Commands));
+                        _packets.Enqueue(new UpdatePacket(1337, p.Tick + _options.TicksFutureSchedule, p.Commands));
                         break;
                     }
                 }
@@ -67,9 +71,12 @@ namespace Dunkel.Game.Network
                                     commands[i] = new SpawnCommand(new Point(c.Position.X / 2, c.Position.Y / 2), c.ClassificationType);
                                     break;
                                 }
+                                default:
+                                    commands[i] = command;
+                                    break;
                             }
                         }
-                        _packets.Enqueue(new UpdatePacket(1338, p.Tick + 3, commands));
+                        _packets.Enqueue(new UpdatePacket(1338, p.Tick + _options.TicksFutureSchedule, commands));
                         break;
                     }
                 }

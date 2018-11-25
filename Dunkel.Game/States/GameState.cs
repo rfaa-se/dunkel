@@ -49,12 +49,7 @@ namespace Dunkel.Game.States
 
         public void Input(InputManager im)
         {
-            if (im.IsMouseRightPressed())
-            {
-                _queuedCommands.Add(new SpawnCommand(im.GetMousePosition(), ClassificationType.Ship));
-            }
-
-            _world.Input(im);
+            _world.Input(im, _queuedCommands);
         }
 
         public void Update()

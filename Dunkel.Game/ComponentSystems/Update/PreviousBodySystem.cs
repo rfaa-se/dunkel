@@ -36,9 +36,7 @@ namespace Dunkel.Game.ComponentSystems.Update
 
         private void HandleComponentAdded(Entity entity, IComponent component)
         {
-            if (!IsRelevantComponent(component)) { return; }
-
-            _nodes.Remove(entity.Id);
+            HandleComponentRemoved(entity, component);
 
             if (entity.TryGetComponent<BodyComponent>(out var body))
             {

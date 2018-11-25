@@ -4,6 +4,8 @@ namespace Dunkel.Game.Utilities
     {
         public static Flint Sqrt(Flint number)
         {
+            if (number.Raw == 0) { return new Flint(0); }
+            
             // modified and taken from https://stackoverflow.com/a/16366529
             long s = 1;
             long t = number.Raw * Flint.Precision;
